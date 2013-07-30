@@ -1,10 +1,10 @@
 hub_bolt_size = "M3";
 hub_bolt_thickness = 2;
 hub_height = 2;
-hub_side_thickness = 1;
+hub_side_thickness = 2;
 hub_ring_thickness = 1;
 hub_extra_length = 0;
-hub_extra_height = 0;
+hub_extra_height = 1;
 axle_diameter = 3;
 wheel_diameter = 20;
 small_sphere_diameter = 3;
@@ -13,12 +13,13 @@ inner_padding = 0.3;
 
 /*
  *
- * BasCaster v0.1
+ * BasCaster v0.2
  *
  * by Basile Laderchi
  *
  * Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported http://creativecommons.org/licenses/by-sa/3.0/
  *
+ * v 0.2, 29 July 2013 : First gamma print (by jinx) failed http://www.youtube.com/watch?v=NPs9qu7P9ec (Y braket broke upon cleaning of support and caster wheel stuck on the inner axle). Changed default hub_side_thickness from 1mm to 2mm and hub_extra_height from 0mm to 1mm.
  * v 0.1, 26 July 2013 : Initial release
  *
  */
