@@ -6,29 +6,36 @@ hub_ring_thickness = 1;
 hub_extra_length = 0;
 hub_extra_height = 1;
 axle_diameter = 3;
+pin_radius = 2;
 wheel_diameter = 20;
 small_sphere_diameter = 3;
 small_sphere_y = 0.1;
 inner_padding = 0.3;
+print_mode = false;
 
 /*
  *
- * BasCaster v0.2
+ * BasCaster v0.4
  *
  * by Basile Laderchi
  *
  * Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported http://creativecommons.org/licenses/by-sa/3.0/
  *
- * v 0.2, 29 July 2013 : First gamma print (by jinx) failed http://www.youtube.com/watch?v=NPs9qu7P9ec (Y braket broke upon cleaning of support and caster wheel stuck on the inner axle). Changed default hub_side_thickness from 1mm to 2mm and hub_extra_height from 0mm to 1mm.
+ * v 0.4, 31 July 2013 : Using pins v2 library for connecting the 2 hemispheres to the main axle. Added pin_radius parameter
+ * v 0.3, 30 July 2013 : Added print_mode parameter (rotates the hub ready for printing)
+ * v 0.2, 29 July 2013 : First gamma print (by jinx) failed http://www.youtube.com/watch?v=NPs9qu7P9ec (Y braket broke upon cleaning of support and caster wheel stuck on the inner axle). Changed default hub_side_thickness from 1mm to 2mm and hub_extra_height from 0mm to 1mm
  * v 0.1, 26 July 2013 : Initial release
  *
  */
 
-basCaster(hub_bolt_size, hub_bolt_thickness, hub_height, hub_side_thickness, hub_ring_thickness, hub_extra_length, hub_extra_height, axle_diameter, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding, $fn=100);
+basCaster(hub_bolt_size, hub_bolt_thickness, hub_height, hub_side_thickness, hub_ring_thickness, hub_extra_length, hub_extra_height, axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding, print_mode, $fn=100);
 
 use <Libs.scad> // http://www.thingiverse.com/thing:6021
+use <pins.scad> // http://www.thingiverse.com/thing:10541
 
-module basCaster(hub_bolt_size, hub_bolt_thickness, hub_height, hub_side_thickness, hub_ring_thickness, hub_extra_length, hub_extra_height, axle_diameter, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding) {
+module basCaster(hub_bolt_size, hub_bolt_thickness, hub_height, hub_side_thickness, hub_ring_thickness, hub_extra_length, hub_extra_height, axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding, print_mode) {
+	print_padding = 1;
+
 	hub_length = wheel_diameter + (hub_side_thickness * 2) + hub_extra_length;
 	hub_width = wheel_diameter;
 	hub_ring_inner_diameter = axle_diameter + inner_padding;
@@ -38,9 +45,23 @@ module basCaster(hub_bolt_size, hub_bolt_thickness, hub_height, hub_side_thickne
 	hub_z_offset = hub_ring_thickness + hub_ring_inner_radius;
 	hub_side_height = wheel_diameter / 2 - hub_z_offset + hub_extra_height;
 
-	hub([hub_length, hub_width, hub_height], hub_bolt_size, hub_bolt_thickness, hub_ring_inner_diameter, hub_side_height, hub_ring_thickness, hub_side_thickness);
-	axle(axle_diameter, axle_length);
-	spherical_wheel(axle_diameter, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding);
+	print_translate_x = print_mode ? (axle_length + wheel_diameter) / 2 + print_padding : 0;
+	print_translate_z = print_mode ? hub_height + hub_side_height + hub_ring_thickness + hub_ring_inner_diameter / 2: 0;
+	print_rotate_x = print_mode ? 180 : 0;
+
+	translate([-print_translate_x / 2, 0, print_translate_z]) {
+		rotate([print_rotate_x, 0, 0]) {
+			hub([hub_length, hub_width, hub_height], hub_bolt_size, hub_bolt_thickness, hub_ring_inner_diameter, hub_side_height, hub_ring_thickness, hub_side_thickness);
+		}
+		axle(axle_diameter, axle_length, pin_radius);
+	}
+	if (!print_mode) {
+		spherical_wheel(axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding);
+	} else {
+		translate([print_translate_x / 2, 0, 0]) {
+			spherical_two_halves_wheel(axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding);
+		}
+	}
 }
 
 module hub(size, hole_size, hole_side_spacing, axle_diameter, hub_side_height, ring_thickness, ring_height) {
@@ -123,57 +144,89 @@ module hub_side_plate(size, axle_diameter, hub_side_height, ring_thickness, ring
 	}
 }
 
-module axle(axle_diameter, axle_length) {
+module axle(axle_diameter, axle_length, pin_radius) {
+	axle_stopper_padding = 2;
+
 	axle_radius = axle_diameter / 2;
+	axle_stopped_radius = axle_radius + axle_stopper_padding;
 	axle_stopper_height = 1;
 
 	union() {
 		rotate([0, 270, 0]) {
 			cylinder(r=axle_radius, h=axle_length, center=true);
 		}
-		inner_axle(axle_diameter, 0);
 		translate([(axle_length + axle_stopper_height) / 2, 0, 0]) {
 			rotate([0, 90, 0]) {
-				cylinder(r=axle_diameter, h=axle_stopper_height, center=true);
+				cylinder(r=axle_stopped_radius, h=axle_stopper_height, center=true);
 			}
 		}
 		translate([-(axle_length + axle_stopper_height) / 2, 0, 0]) {
 			rotate([0, 90, 0]) {
-				cylinder(r=axle_diameter, h=axle_stopper_height, center=true);
+				cylinder(r=axle_stopped_radius, h=axle_stopper_height, center=true);
 			}
 		}
+		inner_axle(axle_diameter, pin_radius);
 	}
 }
 
-module inner_axle(axle_diameter, extra) {
-	padding = 2;
-	half_extra = extra / 2;
-	axle_radius = (axle_diameter + extra) / 2;
-	axle_height = (axle_diameter + padding) * 2;
-	inner_axle_radius = axle_diameter + half_extra;
-	inner_axle_height = 1 + extra;
-	inner_axle_y = axle_height / 2 + half_extra;
+module inner_axle(axle_diameter, pin_radius) {
+	pin_length = axle_diameter / 2 + 4.5;
 
 	union() {
-		translate([0, axle_diameter + padding, 0]) {
-			rotate([90, 0, 0]) {
-				cylinder(r=axle_radius, h=axle_height);
-			}
+		rotate([90, 0, 0]) {
+			pin(pin_length, pin_radius);
 		}
-		translate([0, inner_axle_y, 0]) {
-			rotate([90, 0, 0]) {
-				cylinder(r=inner_axle_radius, h=inner_axle_height);
-			}
+		rotate([-90, 0, 0]) {
+			pin(pin_length, pin_radius);
 		}
-		translate([0, - inner_axle_y + inner_axle_height, 0]) {
-			rotate([90, 0, 0]) {
-				cylinder(r=inner_axle_radius, h=inner_axle_height);
+	}
+}
+
+module inner_axle_cutout(axle_diameter, pin_radius) {
+	pin_length = axle_diameter / 2 + 4.5;
+
+	union() {
+		rotate([90, 0, 0]) {
+			pinhole(pin_length, pin_radius, tight=false);
+		}
+		rotate([-90, 0, 0]) {
+			pinhole(pin_length, pin_radius, tight=false);
+		}
+	}
+}
+
+module spherical_two_halves_wheel(axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding) {
+	padding = 0.5;
+
+	sphere_y = wheel_diameter / 2 + padding;
+
+	translate([0, sphere_y, 0])	{
+		spherical_half_wheel(axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding);
+	}
+	translate([0, -sphere_y, 0])	{
+		spherical_half_wheel(axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding);
+	}
+}
+
+module spherical_half_wheel(axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding) {
+	padding = 0.1;
+
+	sphere_y = axle_diameter + inner_padding * 2;
+	cube_size = wheel_diameter + padding;
+
+	rotate([-90, 0, 0]) {
+		translate([0, sphere_y / 2, 0]) {
+			difference() {
+				spherical_wheel(axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding);
+				translate([-cube_size / 2, 0, -cube_size / 2]) {
+					cube(cube_size);
+				}
 			}
 		}
 	}
 }
 
-module spherical_wheel(axle_diameter, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding) {
+module spherical_wheel(axle_diameter, pin_radius, wheel_diameter, small_sphere_diameter, small_sphere_y, inner_padding) {
 	wheel_radius = wheel_diameter / 2;
 	small_sphere_radius = small_sphere_diameter / 2;
 	small_sphere_y = wheel_radius - small_sphere_radius + small_sphere_y;
@@ -191,7 +244,7 @@ module spherical_wheel(axle_diameter, wheel_diameter, small_sphere_diameter, sma
 		translate([0, - wheel_radius + small_sphere_radius - inner_padding, 0]) {
 			sphere(r=small_sphere_radius + inner_padding);
 		}
-		inner_axle(axle_diameter, inner_padding * 2);
+		inner_axle_cutout(axle_diameter, pin_radius);
 	}
 	small_sphere(small_sphere_radius, [0, small_sphere_y, 0]);
 	small_sphere(small_sphere_radius, [0, -small_sphere_y, 0]);
