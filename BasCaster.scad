@@ -15,16 +15,17 @@ print_mode = false;
 
 /*
  *
- * BasCaster v0.4
+ * BasCaster v0.5
  *
  * by Basile Laderchi
  *
- * Licensed under Creative Commons Attribution-ShareAlike 3.0 Unported http://creativecommons.org/licenses/by-sa/3.0/
+ * Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International http://creativecommons.org/licenses/by-nc-sa/4.0/
  *
- * v 0.4, 31 July 2013 : Using pins v2 library for connecting the 2 hemispheres to the main axle. Added pin_radius parameter
- * v 0.3, 30 July 2013 : Added print_mode parameter (rotates the hub ready for printing)
- * v 0.2, 29 July 2013 : First gamma print (by jinx) failed http://www.youtube.com/watch?v=NPs9qu7P9ec (Y braket broke upon cleaning of support and caster wheel stuck on the inner axle). Changed default hub_side_thickness from 1mm to 2mm and hub_extra_height from 0mm to 1mm
- * v 0.1, 26 July 2013 : Initial release
+ * v 0.5, 20 Nov 2013 : Changed license
+ * v 0.4, 31 Jul 2013 : Using pins v2 library for connecting the 2 hemispheres to the main axle. Added pin_radius parameter
+ * v 0.3, 30 Jul 2013 : Added print_mode parameter (rotates the hub ready for printing)
+ * v 0.2, 29 Jul 2013 : First gamma print (by jinx) failed http://www.youtube.com/watch?v=NPs9qu7P9ec (Y braket broke upon cleaning of support and caster wheel stuck on the inner axle). Changed default hub_side_thickness from 1mm to 2mm and hub_extra_height from 0mm to 1mm
+ * v 0.1, 26 Jul 2013 : Initial release
  *
  */
 
